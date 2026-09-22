@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Garmin Dashboard — Your Fitness Insights</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="stylesheet" href="/src/styles/main.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-left">
+        <svg class="logo-icon" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+        </svg>
+        <h1>Garmin Dashboard</h1>
+      </div>
+      <div class="header-right">
+        <button id="btn-upload" class="btn btn-primary" aria-label="Upload Garmin data files">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Upload Data
+        </button>
+        <button id="btn-demo" class="btn btn-ghost" aria-label="Load demo data">Try Demo</button>
+      </div>
+    </header>
+
+    <!-- Upload Modal -->
+    <div id="upload-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" hidden>
+      <div class="modal-backdrop"></div>
+      <div class="modal-content">
+        <button class="modal-close" aria-label="Close upload dialog">&times;</button>
+        <h2 id="modal-title">Upload Your Garmin Data</h2>
+        <p class="modal-description">Export your data from <a href="https://connect.garmin.com" target="_blank" rel="noopener">Garmin Connect</a> and upload the CSV files here. Your data stays in your browser — nothing is sent to any server.</p>
+
+        <div class="upload-tabs" role="tablist">
+          <button class="tab active" role="tab" aria-selected="true" data-tab="activities">Activities</button>
+          <button class="tab" role="tab" aria-selected="false" data-tab="health">Health Stats</button>
+        </div>
+
+        <div class="tab-panel active" id="panel-activities" role="tabpanel">
+          <div class="drop-zone" id="drop-activities" tabindex="0" role="button" aria-label="Drop activities CSV file here or click to browse">
+            <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
+            <p>Drop your <strong>Activities.csv</strong> here</p>
+            <span class="drop-hint">or click to browse</span>
+            <input type="file" id="file-activities" accept=".csv" hidden />
+          </div>
+          <div class="upload-help">
+            <details>
+              <summary>How to export activities from Garmin Connect</summary>
+              <ol>
+                <li>Go to <a href="https://connect.garmin.com/modern/activities" target="_blank" rel="noopener">connect.garmin.com/modern/activities</a></li>
+                <li>Scroll down to load all your activities</li>
+                <li>Click the <strong>Export CSV</strong> button in the top-right</li>
+                <li>Upload the downloaded CSV file here</li>
+              </ol>
+            </details>
+          </div>
+        </div>
+
+        <div class="tab-panel" id="panel-health" role="tabpanel" hidden>
+          <div class="health-uploads">
+            <div class="drop-zone small" id="drop-steps" tabindex="0" role="button" aria-label="Drop steps CSV file here">
+              <p>📊 <strong>Steps</strong> CSV</p>
+              <input type="file" id="file-steps" accept=".csv" hidden />
+            </div>
+            <div class="drop-zone small" id="drop-heart-rate" tabindex="0" role="button" aria-label="Drop heart rate CSV file here">
+              <p>❤️ <strong>Heart Rate</strong> CSV</p>
+              <input type="file" id="file-heart-rate" accept=".csv" hidden />
+            </div>
+            <div class="drop-zone small" id="drop-sleep" tabindex="0" role="button" aria-label="Drop sleep CSV file here">
+              <p>😴 <strong>Sleep</strong> CSV</p>
+              <input type="file" id="file-sleep" accept=".csv" hidden />
+            </div>
+            <div class="drop-zone small" id="drop-stress" tabindex="0" role="button" aria-label="Drop stress CSV file here">
+              <p>🧠 <strong>Stress</strong> CSV</p>
+              <input type="file" id="file-stress" accept=".csv" hidden />
+            </div>
+          </div>
+          <div class="upload-help">
+            <details>
+              <summary>How to export health data from Garmin Connect</summary>
+              <ol>
+                <li>Go to <a href="https://connect.garmin.com" target="_blank" rel="noopener">Garmin Connect</a> on your desktop</li>
+                <li>Navigate to Health &amp; Performance → Reports</li>
+                <li>Select each metric (Steps, Heart Rate, Sleep, Stress)</li>
+                <li>Set date range and click the <strong>Export</strong> icon</li>
+                <li>Upload each downloaded CSV file here</li>
+              </ol>
+            </details>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button id="btn-process" class="btn btn-primary btn-large" disabled>Load Dashboard</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Welcome Screen (shown when no data loaded) -->
+    <section id="welcome-screen" class="welcome">
+      <div class="welcome-content">
+        <div class="welcome-illustration">
+          <svg viewBox="0 0 200 200" width="200" height="200" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="100" cy="100" r="90" stroke="var(--accent)" stroke-width="2" opacity="0.2"/>
+            <circle cx="100" cy="100" r="60" stroke="var(--accent)" stroke-width="2" opacity="0.4"/>
+            <circle cx="100" cy="100" r="30" stroke="var(--accent)" stroke-width="2" opacity="0.6"/>
+            <path d="M30 130 Q60 80 100 100 Q140 120 170 70" stroke="var(--accent)" stroke-width="3" stroke-linecap="round"/>
+            <circle cx="100" cy="100" r="5" fill="var(--accent)"/>
+          </svg>
+        </div>
+        <h2>Welcome to Your Garmin Dashboard</h2>
+        <p>Upload your Garmin Connect data to see beautiful insights about your fitness journey. All data processing happens locally in your browser.</p>
+        <div class="welcome-actions">
+          <button id="btn-welcome-upload" class="btn btn-primary btn-large">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Upload Your Data
+          </button>
+          <button id="btn-welcome-demo" class="btn btn-ghost btn-large">Try with Demo Data</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Dashboard (hidden until data loaded) -->
+    <main id="dashboard" class="dashboard" hidden>
+      <!-- Filter Bar -->
+      <div class="filter-bar">
+        <div class="filter-group">
+          <label for="date-range">Period</label>
+          <select id="date-range">
+            <option value="7">Last 7 days</option>
+            <option value="30" selected>Last 30 days</option>
+            <option value="90">Last 3 months</option>
+            <option value="180">Last 6 months</option>
+            <option value="365">Last year</option>
+            <option value="all">All time</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="activity-type">Activity</label>
+          <select id="activity-type">
+            <option value="all">All Types</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Summary Cards -->
+      <section class="card-grid" aria-label="Summary statistics">
+        <div class="stat-card" data-stat="total-activities">
+          <div class="stat-icon">🏃</div>
+          <div class="stat-body">
+            <span class="stat-value" id="stat-total-activities">—</span>
+            <span class="stat-label">Activities</span>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="total-distance">
+          <div class="stat-icon">📏</div>
+          <div class="stat-body">
+            <span class="stat-value" id="stat-total-distance">—</span>
+            <span class="stat-label">Total Distance (km)</span>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="total-time">
+          <div class="stat-icon">⏱️</div>
+          <div class="stat-body">
+            <span class="stat-value" id="stat-total-time">—</span>
+            <span class="stat-label">Total Time</span>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="total-calories">
+          <div class="stat-icon">🔥</div>
+          <div class="stat-body">
+            <span class="stat-value" id="stat-total-calories">—</span>
+            <span class="stat-label">Calories Burned</span>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="avg-hr">
+          <div class="stat-icon">❤️</div>
+          <div class="stat-body">
+            <span class="stat-value" id="stat-avg-hr">—</span>
+            <span class="stat-label">Avg Heart Rate</span>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="avg-steps">
+          <div class="stat-icon">👟</div>
+          <div class="stat-body">
+            <span class="stat-value" id="stat-avg-steps">—</span>
+            <span class="stat-label">Avg Daily Steps</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Insights Panel -->
+      <section class="insights-panel" aria-label="AI Insights">
+        <h2 class="section-title">💡 Insights</h2>
+        <div id="insights-container" class="insights-grid"></div>
+      </section>
+
+      <!-- Charts -->
+      <section class="charts-section" aria-label="Charts">
+        <!-- Activity Over Time -->
+        <div class="chart-card full-width">
+          <h3 class="chart-title">Activity Over Time</h3>
+          <div class="chart-container">
+            <canvas id="chart-activity-timeline"></canvas>
+          </div>
+        </div>
+
+        <!-- Distance by Activity Type -->
+        <div class="chart-card">
+          <h3 class="chart-title">Distance by Activity Type</h3>
+          <div class="chart-container">
+            <canvas id="chart-distance-by-type"></canvas>
+          </div>
+        </div>
+
+        <!-- Calories Over Time -->
+        <div class="chart-card">
+          <h3 class="chart-title">Calories Burned</h3>
+          <div class="chart-container">
+            <canvas id="chart-calories"></canvas>
+          </div>
+        </div>
+
+        <!-- Heart Rate Zones -->
+        <div class="chart-card">
+          <h3 class="chart-title">Heart Rate Trends</h3>
+          <div class="chart-container">
+            <canvas id="chart-heart-rate"></canvas>
+          </div>
+        </div>
+
+        <!-- Weekly Volume -->
+        <div class="chart-card">
+          <h3 class="chart-title">Weekly Training Volume</h3>
+          <div class="chart-container">
+            <canvas id="chart-weekly-volume"></canvas>
+          </div>
+        </div>
+
+        <!-- Steps (if health data) -->
+        <div class="chart-card" id="card-steps" hidden>
+          <h3 class="chart-title">Daily Steps</h3>
+          <div class="chart-container">
+            <canvas id="chart-steps"></canvas>
+          </div>
+        </div>
+
+        <!-- Sleep (if health data) -->
+        <div class="chart-card" id="card-sleep" hidden>
+          <h3 class="chart-title">Sleep Duration</h3>
+          <div class="chart-container">
+            <canvas id="chart-sleep"></canvas>
+          </div>
+        </div>
+
+        <!-- Stress (if health data) -->
+        <div class="chart-card" id="card-stress" hidden>
+          <h3 class="chart-title">Stress Levels</h3>
+          <div class="chart-container">
+            <canvas id="chart-stress"></canvas>
+          </div>
+        </div>
+
+        <!-- Pace / Speed Progression -->
+        <div class="chart-card full-width">
+          <h3 class="chart-title">Pace / Speed Progression</h3>
+          <div class="chart-container">
+            <canvas id="chart-pace"></canvas>
+          </div>
+        </div>
+
+        <!-- Day of Week Heatmap -->
+        <div class="chart-card">
+          <h3 class="chart-title">Activity by Day of Week</h3>
+          <div class="chart-container">
+            <canvas id="chart-day-of-week"></canvas>
+          </div>
+        </div>
+
+        <!-- Monthly Summary -->
+        <div class="chart-card">
+          <h3 class="chart-title">Monthly Distance Totals</h3>
+          <div class="chart-container">
+            <canvas id="chart-monthly"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- Recent Activities Table -->
+      <section class="table-section" aria-label="Recent activities">
+        <h2 class="section-title">📋 Recent Activities</h2>
+        <div class="table-wrapper">
+          <table id="activities-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Title</th>
+                <th>Distance</th>
+                <th>Duration</th>
+                <th>Calories</th>
+                <th>Avg HR</th>
+                <th>Avg Pace</th>
+              </tr>
+            </thead>
+            <tbody id="activities-tbody"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>Garmin Dashboard &middot; Your data, your insights &middot; 100% client-side &middot; <a href="https://connect.garmin.com" target="_blank" rel="noopener">Garmin Connect</a></p>
+    </footer>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

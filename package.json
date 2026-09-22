@@ -1,0 +1,20 @@
+{
+  "name": "garmin-dashboard",
+  "version": "1.0.0",
+  "description": "Personal Garmin fitness data dashboard with insights and visualizations",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "chart.js": "4.4.7",
+    "chartjs-adapter-date-fns": "3.0.0",
+    "date-fns": "4.1.0",
+    "papaparse": "5.5.2"
+  },
+  "devDependencies": {
+    "vite": "6.3.5"
+  }
+}
